@@ -2,6 +2,7 @@ package Wapiti::Parser;
 
 use warnings;
 use strict;
+use XML::Parser;
 
 =head1 NAME
 
@@ -14,36 +15,82 @@ Version 0.01
 =cut
 
 our $VERSION = '0.01';
-
+our $AUTHOR = 'Eldar Marcussen - http://www.justanotherhacker.com';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+Wapiti::Parser can parse wapiti xml reports so you can process them via perl. Use the -f xml switch with wapiti to generate xml reports.
 
 Perhaps a little code snippet.
 
     use Wapiti::Parser;
 
     my $foo = Wapiti::Parser->new();
+    $foo->parse('vulnerabilities.xml');
+
     ...
 
 =head1 SUBROUTINES/METHODS
 
-=head2 function1
+=head2 parse
+
+Parses the Wapiti xml report
 
 =cut
 
-sub function1 {
+sub parse {
+    my ($self, $filename) = @_;
+    $parser = new XML::Parser( Style => 'Tree' );
+    $tree = $parser->parsefile( shift @ARGV );
+    $self->{'id'} = $tree->[1][4][0]{'id'};
+    $self->{'tree'} = $tree;
 }
 
 =head2 new
+
+Initializes the new object
 
 =cut
 
 sub new {
     my ($class, %options) = @_;
     my $self = {};
+    $self->{'issues'} = ();
+    $self->{'id'} = 'No wapiti file parsed';
     return bless $self, $class;
+}
+
+=head2 get_issue_count
+
+Returns number of issues identified in the xml file
+
+=cut
+
+sub get_issue_count {
+    my $self = shift;
+    return scalar( $self->{'issues'} );
+}
+
+=head2 get_all_issues
+
+Returns an array of hashreferences, one hash reference per issue
+
+=cut
+
+sub get_all_issues {
+    my $self = shift;
+    return $self->{'issues'};
+}
+
+=head2 get_wapiti_info
+
+Returns the wapiti version of the parsed xml file
+
+=cut
+
+sub get_wapiti_info {
+    my $self = shift;
+    return $self->{'id'};
 }
 
 =head1 AUTHOR
