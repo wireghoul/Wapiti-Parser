@@ -40,8 +40,8 @@ Parses the Wapiti xml report
 
 sub parse {
     my ($self, $filename) = @_;
-    $parser = new XML::Parser( Style => 'Tree' );
-    $tree = $parser->parsefile( shift @ARGV );
+    my $parser = new XML::Parser( Style => 'Tree' );
+    my $tree = $parser->parsefile( $filename );
     $self->{'id'} = $tree->[1][4][0]{'id'};
     $self->{'tree'} = $tree;
 }
