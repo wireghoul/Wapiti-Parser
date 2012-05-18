@@ -43,9 +43,40 @@ sub parse {
     my $parser = new XML::Parser( Style => 'Tree' );
     my $tree = $parser->parsefile( $filename );
     $self->{'id'} = $tree->[1][4][0]{'id'};
+    # Parse categories for issues
+    for (my $x = 4; $x <= scalar( @{ $tree->[1][8] }); $x+=4) {
+        my $category = $tree->[1][8][$x];
+        my $cat_name = $category->[0]{'name'};
+        my $cat_desc = $category->[8][2];
+        my $cat_recc = $category->[12][2];
+        my @bugs = @{ $category->[4] };
+        #print "Buglist: ".scalar(@b)."\n";
+        if (scalar(@bugs) > 1) {
+            for (my $y = 4; $y <= scalar(@bugs); $y+=4) {
+                $self->_add_issue($cat_name, $cat_desc, $cat_recc, $bugs[$y]->[0]{'level'}, $bugs[$y]->[4][2], $bugs[$y]->[8][2], $bugs[$y]->[12][2]);
+            }
+        }
+
+    }
     $self->{'tree'} = $tree;
 }
 
+# Need to strip leading and trailing whitespace
+sub _add_issue {
+    my ($self, $name, $description, $solution, $level, $url, $example, $info) = @_;
+    my $issue = {
+        'category'	=> $name,
+        'description'	=> $description,
+        'solution'	=> $solution,
+        'level'		=> $level,
+        'url'		=> $url,
+        'example'	=> $example,
+        'info'		=> $info
+    };
+    push @{ $self->{'issues'} }, $issue;
+}
+
+    
 =head2 new
 
 Initializes the new object
@@ -55,7 +86,7 @@ Initializes the new object
 sub new {
     my ($class, %options) = @_;
     my $self = {};
-    $self->{'issues'} = ();
+    $self->{'issues'} = [];
     $self->{'id'} = 'No wapiti file parsed';
     return bless $self, $class;
 }
@@ -68,7 +99,8 @@ Returns number of issues identified in the xml file
 
 sub get_issue_count {
     my $self = shift;
-    return scalar( $self->{'issues'} );
+    return 0 if !scalar( $self->{'issues'} );
+    return scalar( @{ $self->{'issues'} });
 }
 
 =head2 get_all_issues
